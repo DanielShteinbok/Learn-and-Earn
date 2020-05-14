@@ -20,7 +20,7 @@ contract("SinglePool", function(accounts) {
 		console.log("\ngetMaturity: " + await course.getMaturity());
 		console.log("\npoolMaturity: " + await course.poolMaturity());
 		console.log("\nstart of current pool: " + (await course.getMaturity() - await course.poolMaturity())); 
-		/*token.getPastEvents("Transfer", {
+		token.getPastEvents("Transfer", {
 			filter: {from: accounts[0], to: addr}, 
 			fromBlock: (await course.getMaturity() - await course.poolMaturity()), 
 			toBlock: "latest"
@@ -34,7 +34,7 @@ contract("SinglePool", function(accounts) {
 				}
 			}
 			
-		);*/
+		);
 		assert.equal(await token.balanceOf(addr), 3, "Pool is missing money!");
 	//	console.log(await token.balanceOf(addr));
 		web3.eth.subscribe("newBlockHeaders").on("data", async function(blockHeader) {
@@ -57,12 +57,11 @@ contract("SinglePool", function(accounts) {
 				assert(courseMaturity > await maturityBlock, "block at which pool matures probably hasn't changed");
 			}
 		});
-		/*assert( await token.getPastEvents("Transfer", {
+		assert( await token.getPastEvents("Transfer", {
 			filter: {from: accounts[3], to: addr}, 
 			fromBlock: await course.getMaturity() - await course.poolMaturity(), 
 			toBlock: "latest"
-			}), "Cannot get transaction event");
-		*/	
+			}), "Cannot get transaction event");	
 		console.log("I actually got here!");	
 	});
 });
