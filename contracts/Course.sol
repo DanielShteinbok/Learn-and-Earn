@@ -2,6 +2,7 @@ pragma solidity >=0.4.21 < 0.7.0;
 
 import "./SinglePool.sol";
 // import ChainlinkClient.sol
+import "../../chainlink/evm-contracts/src/v0.6/ChainlinkClient.sol";
 
 contract Course is ChainlinkClient {
 	uint public startTime;
