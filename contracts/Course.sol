@@ -4,25 +4,38 @@ import "./SinglePool.sol";
 // import ChainlinkClient.sol
 import "../../chainlink/evm-contracts/src/v0.6/ChainlinkClient.sol";
 
+// from aave:
+// import LendingPoolAddressesProvider
+// import LendingPool
+
 contract Course is ChainlinkClient {
-	uint public startTime;
+	//configuration stuff
 	uint public buyInTime;
 	uint public poolMaturity;
 	uint public buyInPrice;
 	address public admin;
 	address public tokenAddress;
-	address public chainlinkOracle;
 
+	//chainlink stuff
+	address public chainlinkOracle;
 	bytes32 public chainlinkJobId;
 	uint public chainlinkPayment = 1 * LINK;
 
+	//aave stuff
+	address public aaveProviderAddress;
+	address public aTokenAddr;
+
+	// true state variables
+	//uint public startTime;
+	uint public maturityCycleStart;
+	uint public buyInStartTime;
 	// the number of SinglePool s in allPools is known at construction time to be:
 	// uint(poolMaturity/buyInTime) + 1
 	mapping (uint8 => SinglePool) public allPools;
 
 	//nextToMature stores the index of the next SinglePool to mature
 	uint8 nextToMature; 
-
+	uint8 currentBuyInPool;
 	modifier adminOnly {
 		require (msg.sender == admin);
 		_;
@@ -32,20 +45,27 @@ contract Course is ChainlinkClient {
 	// TODO: modifier timeIsRight;
 	// see below.
 	modifier poolIsMature {
-		require(now >= startTime + poolMaturity + (uint(poolMaturity/buyInTime)+1-nextToMature)*buyInTime);
+		require(now >= maturityCycleStart + poolMaturity + (uint(poolMaturity/buyInTime)+1-nextToMature)*buyInTime);
+		_;
+	}
+
+	modifier buyinOver {
+		require(now >= buyInStartTime + buyInTime*currentBuyInPool); 
 		_;
 	}
 
 
 	constructor(uint _buyInTime, uint _poolMaturity, uint _buyInPrice, 
-address _tokenAddress, address _oracle, bytes32 _jobId, address _linkAddr=address(0)) public {
+address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, address _aaveProvider, address _linkAddr=address(0)) public {
 		buyInTime = _buyInTime;
 		poolMaturity = _poolMaturity;
 		buyInPrice = _buyInPrice;
 		tokenAddress = _tokenAddress;
 		admin = msg.sender;
 		// startTime = block.number;
-		startTime = now;
+		maturityCycleStart, buyInStartTime = now;
+		aTokenAddr = _aaveToken;
+		aaveProviderAddress = _aaveProvider;
 		for (uint8 i=0; i < uint(poolMaturity/buyInTime) + 1; ++i) {
 			allPools[i] = new SinglePool(admin);
 		}
@@ -56,23 +76,37 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _linkAddr=addres
 		} else {
 			setChainlinkToken(_linkAddr);
 		}
-		Chainlink.request memory req = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
-		req.addUint("until", getMaturity());
-		sendChainlinkRequestTo(chainlinkOracle, req, chainlinkPayment);
+		Chainlink.request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
+		investReq.addUint("until", buyInStartTime + buyInTime);
+		sendChainlinkRequestTo(chainlinkOracle, investReq, chainlinkPayment);
+
+		Chainlink.request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
+		payoutReq.addUint("until", buyInStartTime + currentBuyInPool * buyInTime + poolMaturity);
+		sendChainlinkRequestTo(chainlinkOracle, payoutReq, chainlinkPayment);
+	}
+
+	function invest() public buyInOver {
+		allPools[currentBuyInPool].invest(tokenAddress, aaveProviderAddress);
+		currentBuyInPool = uint8((currentBuyInPool + 1) % uint(poolMaturity/buyInTime + 1));
+		if (currentBuyInPool == 0)
+			buyInStartTime += (uint(poolMaturity/buyInTime) + 1) * buyInTime;
+		Chainlink.request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
+		investReq.addUint("until", buyInStartTime + (currentBuyInPool + 1) * buyInTime);
+		sendChainlinkRequestTo(chainlinkOracle, investReq, chainlinkPayment);
+		Chainlink.request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
+		payoutReq.addUint("until", buyInStartTime + currentBuyInPool * buyInTime + poolMaturity);
+		sendChainlinkRequestTo(chainlinkOracle, payoutReq, chainlinkPayment);
 	}
 
 	function payOut() public poolIsMature {
-		allPools[nextToMature].reset(tokenAddress);
+		allPools[nextToMature].reset(tokenAddress, aTokenAddr);
 		nextToMature = uint8((nextToMature + 1) % uint(poolMaturity/buyInTime + 1));
 		if (nextToMature == 0)
-			startTime += (uint(poolMaturity/buyInTime) + 1) * buyInTime;
-		Chainlink.request memory req = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
-		req.addUint("until", getMaturity());
-		sendChainlinkRequestTo(chainlinkOracle, req, chainlinkPayment);
+			maturityCycleStart += (uint(poolMaturity/buyInTime) + 1) * buyInTime;
 	}
-		
+
 	function getCurrentPool() public view returns (address) {
-		return address(allPools[ uint8((now - startTime)/buyInTime) ]);
+		return address(allPools[ currentBuyInPool ]);
 	}
 
 	/*function getAllPools() public view returns (address[] memory) {
@@ -84,6 +118,7 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _linkAddr=addres
 	}*/
 
 	function getMaturity() public view returns (uint) {
-		return startTime + poolMaturity + (uint(poolMaturity/buyInTime)+1-nextToMature)*buyInTime;
+		// fix: change (uint(poolMaturity/buyInTime)+1-nextToMature) to: nextToMature
+		return maturityCycleStart + poolMaturity + nextToMature*buyInTime;
 	}
 }

@@ -5,6 +5,10 @@ pragma solidity >=0.4.21 < 0.7.0;
 // You will probably have to modify the import path to import IERC20.sol from OpenZeppelin on your machine.
 import "../../openzeppelin/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// import LendingPoolAddressesProvider.sol
+// import LendingPool.sol
+// import aToken.sol
+
 contract SinglePool {
 	address public admin;
 	address courseContract;
@@ -33,8 +37,16 @@ contract SinglePool {
                 lastCompleted = completer;
                 ++numberCompleted;
         }
+	function invest(address tokenAddress, address lendingPoolProvider) public courseContractOnly {
+		IERC20 token = IERC20(tokenAddress);
+		LendingPoolAddressesProvider provider = LendingPoolAddressesProvider(lendingPoolProvider);
+		token.approve(provider.getLendingPoolCore(), token.balanceOf(address(this)));
+		LendingPool(provider.getLendingPool()).deposit(tokenAddress, token.balanceOf(address(this)), 0);
+	}
 	
-	function reset(address tokenAddress) public courseContractOnly {
+	function reset(address tokenAddress, address aTokenAddr) public courseContractOnly {
+		aToken aaveToken = aToken(aTokenAddr);
+		aaveToken.redeem(aaveToken.balanceOf(address(this)));
 		IERC20 token = IERC20(tokenAddress);
 		if (numberCompleted != 0) {
 			uint payOutAmount = token.balanceOf(address(this)) / numberCompleted;
