@@ -1,0 +1,14 @@
+NOTE: the following works in console to detect transactions:
+
+// making transactions:
+> token.transfer(addrTo, value, {from: accounts[0]})
+> let transfers = await token.getPastEvents("Transfer", {filter: {from: accounts[0], to: addr}})
+> console.log(transfers[0].logIndex)
+> console.log(transfers[0].returnValues)
+> console.log(transfers[0].returnValues.value)
+> for (var i=0; i < transfers.length; ++i) { console.log(transfers[i].returnValues.value); }
+
+NOTE: could not perform the iteration above with:
+> for(eventItem in transfers) ... 
+or the like.
+
