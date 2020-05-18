@@ -31,7 +31,7 @@ contract Course is ChainlinkClient {
 	uint public buyInStartTime;
 	// the number of SinglePool s in allPools is known at construction time to be:
 	// uint(poolMaturity/buyInTime) + 1
-	mapping (uint8 => SinglePool) public allPools;
+	mapping (uint8 => SinglePool) private allPools;
 
 	//nextToMature stores the index of the next SinglePool to mature
 	uint8 nextToMature; 
@@ -120,5 +120,9 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 	function getMaturity() public view returns (uint) {
 		// fix: change (uint(poolMaturity/buyInTime)+1-nextToMature) to: nextToMature
 		return maturityCycleStart + poolMaturity + nextToMature*buyInTime;
+	}
+
+	getPoolByIndex(uint8 poolIndex) public view returns (address) {
+		return address(allPools[poolIndex]);
 	}
 }
