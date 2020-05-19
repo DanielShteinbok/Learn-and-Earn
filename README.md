@@ -14,7 +14,14 @@ var numberPools = await course.poolMaturity();
 numberPools /= await course.buyInTime();
 numberPools = Math.floor(numberPools);
 ++numberPools; 
-/* Math.floor and ++numberPools is an implementation that mimics the ceiling() logical function, while ensuring that even in the case of the maturityPeriod being divisible by the buyInPeriod, the number of pools is one greater than the result of that division, because this a) is constistent with what the smart contract does, and b) ensures that there is always a window within which the the the buy-in period of any pool can end safely. */
+/* Math.floor and ++numberPools is an implementation 
+that mimics the ceiling() logical function, while 
+ensuring that even in the case of the maturityPeriod
+being divisible by the buyInPeriod, the number of 
+pools is one greater than the result of that division, 
+because this a) is constistent with what the smart contract does,
+and b) ensures that there is always a window within which
+the the the buy-in period of any pool can end safely. */
 ```
 
 ### Getting pool addresses
