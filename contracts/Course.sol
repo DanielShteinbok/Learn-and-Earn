@@ -34,8 +34,8 @@ contract Course is ChainlinkClient {
 	mapping (uint8 => SinglePool) private allPools;
 
 	//nextToMature stores the index of the next SinglePool to mature
-	uint8 nextToMature; 
-	uint8 currentBuyInPool;
+	uint8 public nextToMature; 
+	uint8 public currentBuyInPool;
 	modifier adminOnly {
 		require (msg.sender == admin);
 		_;
