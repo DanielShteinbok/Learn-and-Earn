@@ -6,6 +6,7 @@ import "../../chainlink/evm-contracts/src/v0.6/ChainlinkClient.sol";
 
 // from aave:
 // import LendingPoolAddressesProvider
+// import ../../aave-protocol/contracts/lendingpool/LendingPoolAddressesProvider
 // import LendingPool
 
 contract Course is ChainlinkClient {
@@ -49,21 +50,22 @@ contract Course is ChainlinkClient {
 		_;
 	}
 
-	modifier buyinOver {
+	modifier buyInOver {
 		require(now >= buyInStartTime + buyInTime*currentBuyInPool); 
 		_;
 	}
 
 
 	constructor(uint _buyInTime, uint _poolMaturity, uint _buyInPrice, 
-address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, address _aaveProvider, address _linkAddr=address(0)) public {
+address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, address _aaveProvider, address _linkAddr) public {
 		buyInTime = _buyInTime;
 		poolMaturity = _poolMaturity;
 		buyInPrice = _buyInPrice;
 		tokenAddress = _tokenAddress;
 		admin = msg.sender;
 		// startTime = block.number;
-		maturityCycleStart, buyInStartTime = now;
+		maturityCycleStart = now;
+		buyInStartTime = now;
 		aTokenAddr = _aaveToken;
 		aaveProviderAddress = _aaveProvider;
 		for (uint8 i=0; i < uint(poolMaturity/buyInTime) + 1; ++i) {
@@ -76,11 +78,11 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 		} else {
 			setChainlinkToken(_linkAddr);
 		}
-		Chainlink.request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
+		Chainlink.Request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
 		investReq.addUint("until", buyInStartTime + buyInTime);
 		sendChainlinkRequestTo(chainlinkOracle, investReq, chainlinkPayment);
 
-		Chainlink.request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
+		Chainlink.Request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
 		payoutReq.addUint("until", buyInStartTime + currentBuyInPool * buyInTime + poolMaturity);
 		sendChainlinkRequestTo(chainlinkOracle, payoutReq, chainlinkPayment);
 	}
@@ -90,10 +92,10 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 		currentBuyInPool = uint8((currentBuyInPool + 1) % uint(poolMaturity/buyInTime + 1));
 		if (currentBuyInPool == 0)
 			buyInStartTime += (uint(poolMaturity/buyInTime) + 1) * buyInTime;
-		Chainlink.request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
+		Chainlink.Request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
 		investReq.addUint("until", buyInStartTime + (currentBuyInPool + 1) * buyInTime);
 		sendChainlinkRequestTo(chainlinkOracle, investReq, chainlinkPayment);
-		Chainlink.request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
+		Chainlink.Request memory payoutReq = buildChainlinkRequest(chainlinkJobId, address(this), this.payOut.selector);
 		payoutReq.addUint("until", buyInStartTime + currentBuyInPool * buyInTime + poolMaturity);
 		sendChainlinkRequestTo(chainlinkOracle, payoutReq, chainlinkPayment);
 	}
@@ -122,7 +124,7 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 		return maturityCycleStart + poolMaturity + nextToMature*buyInTime;
 	}
 
-	getPoolByIndex(uint8 poolIndex) public view returns (address) {
+	function getPoolByIndex(uint8 poolIndex) public view returns (address) {
 		return address(allPools[poolIndex]);
 	}
 }

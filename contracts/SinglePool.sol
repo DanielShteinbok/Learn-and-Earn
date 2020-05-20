@@ -3,11 +3,15 @@ pragma solidity >=0.4.21 < 0.7.0;
 // below, the import path is relative to my own directory structure/inability to import
 // npm-installed openzeppelin contracts properly.
 // You will probably have to modify the import path to import IERC20.sol from OpenZeppelin on your machine.
-import "../../openzeppelin/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+// import OpenZeppelin's IERC20.sol
+import "../../openzeppelin/node_modules/@openzeppelin/contracts/token/ERC20/IERC20.sol";
 // import LendingPoolAddressesProvider.sol
+import "../../flashloan-box/contracts/aave/ILendingPoolAddressesProvider.sol";
 // import LendingPool.sol
+import "../../flashloan-box/contracts/aave/ILendingPool.sol";
 // import aToken.sol
+import "./IAToken.sol";
 
 contract SinglePool {
 	address public admin;
@@ -39,13 +43,13 @@ contract SinglePool {
         }
 	function invest(address tokenAddress, address lendingPoolProvider) public courseContractOnly {
 		IERC20 token = IERC20(tokenAddress);
-		LendingPoolAddressesProvider provider = LendingPoolAddressesProvider(lendingPoolProvider);
+		ILendingPoolAddressesProvider provider = ILendingPoolAddressesProvider(lendingPoolProvider);
 		token.approve(provider.getLendingPoolCore(), token.balanceOf(address(this)));
-		LendingPool(provider.getLendingPool()).deposit(tokenAddress, token.balanceOf(address(this)), 0);
+		ILendingPool(provider.getLendingPool()).deposit(tokenAddress, token.balanceOf(address(this)), 0);
 	}
 	
 	function reset(address tokenAddress, address aTokenAddr) public courseContractOnly {
-		aToken aaveToken = aToken(aTokenAddr);
+		IAToken aaveToken = IAToken(aTokenAddr);
 		aaveToken.redeem(aaveToken.balanceOf(address(this)));
 		IERC20 token = IERC20(tokenAddress);
 		if (numberCompleted != 0) {
