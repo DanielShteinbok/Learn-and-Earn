@@ -6,15 +6,15 @@ It is up to the utilizing dapp's back-end to keep track of `Course` contract add
 ## Setting everything up:
 ### Step one: deploy the contract
 The only contract to deploy is the `Course` contract, assuming that the aave contracts and alarm clock chainlink contract have been deployed. When deploying the `Course` contract, the following arguments should be provided:
-`_buyInTime`: the length (in time units) of the buy-in periods of the pools
-`_poolMaturity`: the time from the start of a pool's buy-in period to the time that the money is paid out
-`_buyInPrice`: the minimum stake that each student must place. Since "enrolling" or staking happens entirely via interaction with the blockchain, I thought it might be useful to keep this information on the blockchain as well.
-`_tokenAddress`: the address of the underlying ERC20 token used to buy into the pool, and which is paid out to successfully completing students.
-`_oracle`: the address of the chainlink alarm clock oracle. E.g., on Ropsten, this would be 0xc99B3D447826532722E41bc36e644ba3479E4365
-`_jobId`: the chainlink job ID. E.g. on Ropsten, this would be 2ebb1c1a4b1e4229adac24ee0b5f784f
-`_aaveToken`: the address of the appropriate aToken contract (i.e. corresponding to the `_tokenAddress`).
-`_aaveProvider`: the address of Aave's `LendingPoolAddressesProvider` contract. E.g. on Ropsten this would be 0x1c8756FD2B28e9426CDBDcC7E3c4d64fa9A54728
-`_linkAddr`: the address of the LINK token contract. E.g. on Ropsten this would be 0x20fE562d797A42Dcb3399062AE9546cd06f63280
+*	`_buyInTime`: the length (in time units) of the buy-in periods of the pools
+*	`_poolMaturity`: the time from the start of a pool's buy-in period to the time that the money is paid out
+* 	`_buyInPrice`: the minimum stake that each student must place. Since "enrolling" or staking happens entirely via interaction with the blockchain, I thought it might be useful to keep this information on the blockchain as well.
+*	`_tokenAddress`: the address of the underlying ERC20 token used to buy into the pool, and which is paid out to successfully completing students.
+*	`_oracle`: the address of the chainlink alarm clock oracle. E.g., on Ropsten, this would be 0xc99B3D447826532722E41bc36e644ba3479E4365
+*	`_jobId`: the chainlink job ID. E.g. on Ropsten, this would be 2ebb1c1a4b1e4229adac24ee0b5f784f
+*	`_aaveToken`: the address of the appropriate aToken contract (i.e. corresponding to the `_tokenAddress`).
+*	`_aaveProvider`: the address of Aave's `LendingPoolAddressesProvider` contract. E.g. on Ropsten this would be 0x1c8756FD2B28e9426CDBDcC7E3c4d64fa9A54728
+*	`_linkAddr`: the address of the LINK token contract. E.g. on Ropsten this would be 0x20fE562d797A42Dcb3399062AE9546cd06f63280
 
 ### Step two: fund the contract with LINK:
 At a minimum, the `Course` contract must be funded with 2 LINK before calling `Course.initialize()`, otherwise initialization will fail and the `Course` contract will not work properly.
