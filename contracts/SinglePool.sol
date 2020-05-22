@@ -13,6 +13,19 @@ import "../../flashloan-box/contracts/aave/ILendingPool.sol";
 // import aToken.sol
 import "./IAToken.sol";
 
+
+// if deploying via remix:
+/*
+// import OpenZeppelin's IERC20.sol
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/IERC20.sol";
+// import LendingPoolAddressesProvider.sol
+import "https://github.com/aave/flashloan-box/blob/master/contracts/aave/ILendingPoolAddressesProvider.sol";
+// import LendingPool.sol
+import "https://github.com/aave/flashloan-box/blob/master/contracts/aave/ILendingPool.sol";
+// import aToken.sol
+import "IAToken.sol";
+*/
+
 contract SinglePool {
 	address public admin;
 	address courseContract;

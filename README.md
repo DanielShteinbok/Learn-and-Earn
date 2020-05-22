@@ -3,6 +3,28 @@ These are the smart contracts that form the blockchain component of the Learn an
 It is assumed that you have a `course` truffle-contract object (i.e. created via `const course = await Course.deployed()` using truffle's truffle-contract library, where `Course` is the JSON blob associated with a compiled `contracts/Course.sol`.
 It is up to the utilizing dapp's back-end to keep track of `Course` contract addresses, but all the pools for a single `Course` will be managed by that `Course` contract, and can be interacted with as shown below.
 
+## Setting everything up:
+### Step one: deploy the contract
+The only contract to deploy is the `Course` contract, assuming that the aave contracts and alarm clock chainlink contract have been deployed. When deploying the `Course` contract, the following arguments should be provided:
+`_buyInTime`: the length (in time units) of the buy-in periods of the pools
+`_poolMaturity`: the time from the start of a pool's buy-in period to the time that the money is paid out
+`_buyInPrice`: the minimum stake that each student must place. Since "enrolling" or staking happens entirely via interaction with the blockchain, I thought it might be useful to keep this information on the blockchain as well.
+`_tokenAddress`: the address of the underlying ERC20 token used to buy into the pool, and which is paid out to successfully completing students.
+`_oracle`: the address of the chainlink alarm clock oracle. E.g., on Ropsten, this would be 0xc99B3D447826532722E41bc36e644ba3479E4365
+`_jobId`: the chainlink job ID. E.g. on Ropsten, this would be 2ebb1c1a4b1e4229adac24ee0b5f784f
+`_aaveToken`: the address of the appropriate aToken contract (i.e. corresponding to the `_tokenAddress`).
+`_aaveProvider`: the address of Aave's `LendingPoolAddressesProvider` contract. E.g. on Ropsten this would be 0x1c8756FD2B28e9426CDBDcC7E3c4d64fa9A54728
+`_linkAddr`: the address of the LINK token contract. E.g. on Ropsten this would be 0x20fE562d797A42Dcb3399062AE9546cd06f63280
+
+### Step two: fund the contract with LINK:
+At a minimum, the `Course` contract must be funded with 2 LINK before calling `Course.initialize()`, otherwise initialization will fail and the `Course` contract will not work properly.
+### Step three: call Course.initialize():
+the initialize() function will start the first two "alarm clocks" via chainlink: one for the expiration of the first buy-in period, and the other for the expiration of the first pool's maturity period. Additionally, this function will set the start times that are used internally to ensure that some functions are not called early.
+### Step four (perhaps most important): repeat step two forever:
+Seriously, every time a buy-in period expires, the `Course` contract will create a new "alarm clock" via Chainlink, to signal the expiration of the next buy-in period. This will require 1 LINK. If the `Course` has not been supplied with that LINK, this will fail, so after `Course` has been resupplied with LINK, `Course.invest()` will need to be re-called manually.
+Every time a pool matures, a new "alarm clock" is created for the end of the next maturity period, as above. In this case, if the call by the Chainlink node fails, the function that must be re-called manually is `Course.payOut()`.
+Given those above two requirements, the `Course` contract should be funded at the rate of `1 LINK * (buyInTime + poolMaturity)/(buyInTime*poolMaturity)`.
+
 ## Get all pool addresses for a Course
 To find out whether a person has staked in a course, and what pool that stake was in, it is necessary to know the addresses of all the pools associated with a Course (so it is possible to filter event logs appropriately). A course contract does not expose a function that will return all related pools simultaneously. However, the contract does expose an auto-generated getter function for a mapping `(uint8 => SinglePool)`. The pools are referenced by consecutive values from 0 to one less than the number of pools; it is thus possible to iterate through them, if you know how many pools there are. To calculate this, one can do the following:
 

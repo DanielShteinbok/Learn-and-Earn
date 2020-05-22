@@ -4,10 +4,12 @@ import "./SinglePool.sol";
 // import ChainlinkClient.sol
 import "../../chainlink/evm-contracts/src/v0.6/ChainlinkClient.sol";
 
-// from aave:
-// import LendingPoolAddressesProvider
-// import ../../aave-protocol/contracts/lendingpool/LendingPoolAddressesProvider
-// import LendingPool
+// if deploying via remix:
+/*
+import "SinglePool.sol";
+// import ChainlinkClient.sol
+import "https://github.com/smartcontractkit/chainlink/blob/develop/evm-contracts/src/v0.6/ChainlinkClient.sol";
+*/
 
 contract Course is ChainlinkClient {
 	//configuration stuff
@@ -55,17 +57,17 @@ contract Course is ChainlinkClient {
 		_;
 	}
 
-
 	constructor(uint _buyInTime, uint _poolMaturity, uint _buyInPrice, 
-address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, address _aaveProvider, address _linkAddr) public {
+		address _tokenAddress, address _oracle, bytes32 _jobId, 
+		address _aaveToken, address _aaveProvider, address _linkAddr) public {
+
 		buyInTime = _buyInTime;
 		poolMaturity = _poolMaturity;
 		buyInPrice = _buyInPrice;
 		tokenAddress = _tokenAddress;
 		admin = msg.sender;
 		// startTime = block.number;
-		maturityCycleStart = now;
-		buyInStartTime = now;
+		
 		aTokenAddr = _aaveToken;
 		aaveProviderAddress = _aaveProvider;
 		for (uint8 i=0; i < uint(poolMaturity/buyInTime) + 1; ++i) {
@@ -78,6 +80,10 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 		} else {
 			setChainlinkToken(_linkAddr);
 		}
+	}
+	function initialize() public {
+	    maturityCycleStart = now;
+		buyInStartTime = now;
 		Chainlink.Request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
 		investReq.addUint("until", buyInStartTime + buyInTime);
 		sendChainlinkRequestTo(chainlinkOracle, investReq, chainlinkPayment);
@@ -86,7 +92,6 @@ address _tokenAddress, address _oracle, bytes32 _jobId, address _aaveToken, addr
 		payoutReq.addUint("until", buyInStartTime + currentBuyInPool * buyInTime + poolMaturity);
 		sendChainlinkRequestTo(chainlinkOracle, payoutReq, chainlinkPayment);
 	}
-
 	function invest() public buyInOver {
 		allPools[currentBuyInPool].invest(tokenAddress, aaveProviderAddress);
 		currentBuyInPool = uint8((currentBuyInPool + 1) % uint(poolMaturity/buyInTime + 1));
