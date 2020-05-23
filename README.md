@@ -25,6 +25,14 @@ Seriously, every time a buy-in period expires, the `Course` contract will create
 Every time a pool matures, a new "alarm clock" is created for the end of the next maturity period, as above. In this case, if the call by the Chainlink node fails, the function that must be re-called manually is `Course.payOut()`.
 Given those above two requirements, the `Course` contract should be funded at the rate of `1 LINK * (buyInTime + poolMaturity)/(buyInTime*poolMaturity)`.
 
+## Staking into a course
+To stake into a course in a single transaction, a student only has to make one transaction: to transfer the appropriate amount of some ERC20 token into the appropriate pool. Assuming `token` is a variable that stores the web3 Contract object representing the ERC20 token, and `course` is a variable that stores the web3 Contract object representing the `Course` contract, staking can be done as follows:
+```javascript
+token.methods.transfer(await course.methods.getCurrentPool().call(), 
+	await course.methods.buyInPrice().call())
+	.send({from: /*some address here*/});
+```
+after this, the "Transfer" event emitted by the ERC20 token must be caught on the back end. This is covered below.
 ## Get all pool addresses for a Course
 To find out whether a person has staked in a course, and what pool that stake was in, it is necessary to know the addresses of all the pools associated with a Course (so it is possible to filter event logs appropriately). A course contract does not expose a function that will return all related pools simultaneously. However, the contract does expose an auto-generated getter function for a mapping `(uint8 => SinglePool)`. The pools are referenced by consecutive values from 0 to one less than the number of pools; it is thus possible to iterate through them, if you know how many pools there are. To calculate this, one can do the following:
 
