@@ -124,3 +124,7 @@ pool.methods.addCompleter(completerAddress).send({from: <admin address here>});
 ```
 note that the `addCompleter` method can only be called by the same address that deployed the `Course` contract (called the "admin" address, for lack of a better term).
 
+## Notes:
+Here, there will be a list of important notes about this project:
+* within `/tests`, `coursetest.js` and `singlepooltest.js` have so far been "deprecated", as in they were written for a totally different version of the project, and so will not work any more. There will be a new test called `completetest.js`, which is intended to test the system as a whole on the Ropsten testnet.
+

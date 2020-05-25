@@ -4,7 +4,8 @@ const fs = require("fs");
 
 contract("SinglePool", function(accounts) {
 	it("Should get currentPool, pay 3 Token to it, add two completers, and then call the Course's payout", async function (){
-		const token = await Token.deployed();
+		//const token = await Token.deployed();
+		const token = new web3.eth.Contract(JSON.parse(fs.readFileSync("../build/contracts/IERC20.json")).abi, "0xf80A32A835F79D7787E8a8ee5721D0fEaFd78108");
 		const course = await Course.deployed();
 		const addr = await course.getCurrentPool();
 		const pool = new web3.eth.Contract(JSON.parse(fs.readFileSync("../build/contracts/SinglePool.json")).abi, addr);
@@ -13,14 +14,14 @@ contract("SinglePool", function(accounts) {
 //		console.log("SinglePool admin address: " + await pool.getAdmin() + '\n');
 		console.log("accounts[0]: " + accounts[0] + '\n');
 		const maturityBlock = await course.getMaturity();
-		token.transfer(addr, 3, {from: accounts[0]});
+		//token.transfer(addr, 3, {from: accounts[0]});
 
 		pool.methods.addCompleter(accounts[0]).send({from: accounts[0]});
 		pool.methods.addCompleter(accounts[1]).send({from: accounts[0]});
 		console.log("\ngetMaturity: " + await course.getMaturity());
 		console.log("\npoolMaturity: " + await course.poolMaturity());
 		console.log("\nstart of current pool: " + (await course.getMaturity() - await course.poolMaturity())); 
-		token.getPastEvents("Transfer", {
+		/*token.getPastEvents("Transfer", {
 			filter: {from: accounts[0], to: addr}, 
 			fromBlock: (await course.getMaturity() - await course.poolMaturity()), 
 			toBlock: "latest"
@@ -62,6 +63,6 @@ contract("SinglePool", function(accounts) {
 			fromBlock: await course.getMaturity() - await course.poolMaturity(), 
 			toBlock: "latest"
 			}), "Cannot get transaction event");	
-		console.log("I actually got here!");	
+		console.log("I actually got here!");*/	
 	});
 });
