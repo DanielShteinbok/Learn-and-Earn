@@ -82,7 +82,8 @@ contract Course is ChainlinkClient {
 		}
 	}
 	function initialize() public {
-	    maturityCycleStart = now;
+		require(buyInStartTime == 0 && maturityCycleStart == 0);
+	    	maturityCycleStart = now;
 		buyInStartTime = now;
 		Chainlink.Request memory investReq = buildChainlinkRequest(chainlinkJobId, address(this), this.invest.selector);
 		investReq.addUint("until", buyInStartTime + buyInTime);
