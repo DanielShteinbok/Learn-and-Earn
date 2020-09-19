@@ -1,5 +1,5 @@
 # Learn and Earn
-These are the smart contracts that form the blockchain component of the Learn and Earn smart contract, as well as some truffle scripts for testing and migrations. Below, you will find instructions on interacting with the smart contracts via javascript.
+These are the smart contracts that form the blockchain component of the Learn and Earn project, as well as some truffle scripts for testing and migrations. Below, you will find instructions on interacting with the smart contracts via javascript.
 It is assumed that you have a `course` truffle-contract object (i.e. created via `const course = await Course.deployed()` using truffle's truffle-contract library, where `Course` is the JSON blob associated with a compiled `contracts/Course.sol`.
 It is up to the utilizing dapp's back-end to keep track of `Course` contract addresses, but all the pools for a single `Course` will be managed by that `Course` contract, and can be interacted with as shown below.
 
